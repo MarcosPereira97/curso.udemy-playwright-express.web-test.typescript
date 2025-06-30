@@ -1,34 +1,58 @@
-import test, { expect } from "@playwright/test";
+import { deleteTaskByHelper, postTask } from "./support/helpers";
 
-test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+import { Taskmodel } from "./fixtures/task.model";
+import { TasksPage } from "./support/pages/tasks";
+import data from "./fixtures/tasks.json";
+import test from "@playwright/test";
+
+test.describe("cadastro", () => {
+  test("deve poder cadastrar uma nova tarefa", async ({ page, request }) => {
+    const task = data.success as Taskmodel;
+
+    await deleteTaskByHelper(request, task.name);
+
+    const tasksPage: TasksPage = new TasksPage(page);
+
+    await tasksPage.go();
+    await tasksPage.create(task);
+    await tasksPage.shouldHaveText(task.name);
+  });
+
+  test("nao deve permitir tarefa duplicada", async ({ page, request }) => {
+    const task = data.duplicate as Taskmodel;
+
+    await deleteTaskByHelper(request, task.name);
+
+    const tasksPage: TasksPage = new TasksPage(page);
+
+    await tasksPage.go();
+    await postTask(request, task);
+    await tasksPage.create(task);
+    await tasksPage.alertHaveText("Task already exists!");
+  });
+
+  test("campo obrigatorio", async ({ page }) => {
+    const task = data.required as Taskmodel;
+
+    const tasksPage: TasksPage = new TasksPage(page);
+
+    await tasksPage.go();
+    await tasksPage.create(task);
+    await tasksPage.alertRequiredField();
+  });
 });
 
-test("deve poder cadastrar uma nova tarefa", async ({ page, request }) => {
-  const newTask = "Fazer Café";
-  await request.delete(`http://localhost:3333/helper/tasks/${newTask}`);
+test.describe("atualização", () => {
+  test("deve concluir uma tarefa", async ({ page, request }) => {
+    const task = data.update as Taskmodel;
 
-  await page.fill("#newTask", newTask);
-  await page.click("button[type='submit']");
-  await expect(page.getByText(newTask)).toBeVisible();
-});
+    await deleteTaskByHelper(request, task.name);
+    await postTask(request, task);
 
-test("nao deve permitir tarefa duplicada", async ({ page, request }) => {
-  const duplicateTask = {
-    name: "Comprar Ketchup",
-    is_done: false,
-  };
+    const tasksPage: TasksPage = new TasksPage(page);
 
-  expect(
-    await request.post("http://localhost:3333/tasks", {
-      data: duplicateTask,
-    })
-  ).toBeTruthy();
-
-  await page.fill("#newTask", duplicateTask.name);
-  await page.click("button[type='submit']");
-
-  await expect(page.locator(".swal2-html-container")).toHaveText(
-    "Task already exists!"
-  );
+    await tasksPage.go();
+    await tasksPage.toggle(task.name);
+    await tasksPage.shouldBeDone(task.name);
+  });
 });
