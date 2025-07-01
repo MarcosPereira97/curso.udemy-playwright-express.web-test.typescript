@@ -41,11 +41,18 @@ jobs:
         run: |
           npx concurrently \
             "npm run dev --prefix apps/api" \
-            "npm run dev --prefix apps/web"
-        shell: bash
+            "npx http-server ./apps/web --port 8080"
+        shell: bash &
 
       - name: Wait for servers to be ready
-        run: npx wait-on http://localhost:8080 http://localhost:3333
+        run: |
+          echo "Esperando portas 3333 (API) e 8080 (WEB)..."
+          npx wait-on http://127.0.0.1:8080 http://127.0.0.1:3333
+
+      - name: Testando se a API responde
+        run: |
+          curl -I http://127.0.0.1:3333/tasks || echo "Erro ao chamar /tasks"
+          curl -I http://127.0.0.1:8080 || echo "Erro ao acessar WEB"
 
       - name: Run Playwright tests
         run: npx playwright test
