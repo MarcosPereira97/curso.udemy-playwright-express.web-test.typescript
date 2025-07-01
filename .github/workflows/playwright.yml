@@ -42,7 +42,7 @@ jobs:
           npx concurrently \
             "npm run dev --prefix apps/api" \
             "npx http-server ./apps/web --port 8080"
-        shell: bash &
+        shell: bash
 
       - name: Wait for servers to be ready
         run: |
