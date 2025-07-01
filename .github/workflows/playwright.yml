@@ -39,15 +39,15 @@ jobs:
 
       - name: Start API and Web servers
         run: |
-          npx concurrently \
+          npx concurrently --kill-others-on-fail \
             "npm run dev --prefix apps/api" \
-            "npx http-server ./apps/web --port 8080"
+            "npx http-server ./apps/web --port 8080" &
         shell: bash
 
       - name: Wait for servers to be ready
         run: |
           echo "Esperando portas 3333 (API) e 8080 (WEB)..."
-          npx wait-on http://127.0.0.1:8080 http://127.0.0.1:3333
+          npx wait-on --timeout 120000 http://127.0.0.1:8080 http://127.0.0.1:3333
 
       - name: Testando se a API responde
         run: |
