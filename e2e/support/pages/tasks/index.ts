@@ -10,7 +10,7 @@ export class TasksPage {
   }
 
   async go() {
-    await this.page.goto("http://localhost:8080");
+    await this.page.goto("/");
   }
 
   async create(task: Taskmodel) {
@@ -21,6 +21,12 @@ export class TasksPage {
   async toggle(taskName: string) {
     await this.page.click(
       `//p[text()='${taskName}']/..//button[contains(@class, 'Toggle')]`
+    );
+  }
+
+  async remove(taskName: string) {
+    await this.page.click(
+      `//p[text()='${taskName}']/..//button[contains(@class, 'Delete')]`
     );
   }
 
@@ -47,5 +53,9 @@ export class TasksPage {
       "text-decoration-line",
       "line-through"
     );
+  }
+
+  async shouldNotExist(taskName: string) {
+    await expect(this.page.getByText(taskName)).not.toBeVisible();
   }
 }
