@@ -34,17 +34,15 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
+      - name: Install concurrently and wait-on
+        run: npm install -D concurrently wait-on
+
       - name: Run tests with servers
         run: |
-          # Inicia os servidores em background
-          cd apps/api && npm run dev &
-          cd apps/web && npm run dev &
-
-          # Aguarda os servidores estarem prontos
-          npx wait-on http://localhost:3333 http://localhost:8080 -t 30000
-
-          # Executa os testes
-          npx playwright test
+          npx concurrently -k -s first \
+            "cd apps/api && npm run dev" \
+            "cd apps/web && npm run dev" \
+            "npx wait-on http://localhost:3333 http://localhost:8080 && npx playwright test"
 
       - name: Upload Playwright report
         if: always()
