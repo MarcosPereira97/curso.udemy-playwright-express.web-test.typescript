@@ -34,28 +34,13 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Install concurrently & wait-on
-        run: npm install --save-dev concurrently wait-on
-
-      - name: Start API and Web servers
+      - name: Run tests with servers
         run: |
-          npx concurrently --kill-others-on-fail \
-            "npm run dev --prefix apps/api" \
-            "npx http-server ./apps/web --port 8080" &
-        shell: bash
-
-      - name: Wait for servers to be ready
-        run: |
-          echo "Esperando portas 3333 (API) e 8080 (WEB)..."
-          npx wait-on --timeout 120000 http://127.0.0.1:8080 http://127.0.0.1:3333
-
-      - name: Testando se a API responde
-        run: |
-          curl -I http://127.0.0.1:3333/tasks || echo "Erro ao chamar /tasks"
-          curl -I http://127.0.0.1:8080 || echo "Erro ao acessar WEB"
-
-      - name: Run Playwright tests
-        run: npx playwright test
+          # Inicia os servidores e executa os testes
+          npx concurrently -k -s first -n "API,WEB,TEST" \
+            "cd apps/api && npm run dev" \
+            "cd apps/web && npm run dev" \
+            "npx wait-on http://localhost:3333 http://localhost:8080 && npx playwright test"
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
