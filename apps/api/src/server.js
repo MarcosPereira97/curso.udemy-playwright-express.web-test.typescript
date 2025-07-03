@@ -1,4 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var app_1 = require("./app");
-app_1.app.listen(3333, function () { return console.log("Server is running!"); });
+const { app } = require("./app");
+
+const PORT = process.env.PORT || 3333;
+const HOST = process.env.HOST || "0.0.0.0";
+
+app.listen(PORT, HOST, () => {
+  console.log(`Server is running on http://${HOST}:${PORT}`);
+});

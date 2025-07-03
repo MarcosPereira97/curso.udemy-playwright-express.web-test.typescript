@@ -36,14 +36,18 @@ jobs:
 
       - name: Run tests with servers
         run: |
-          # Inicia os servidores e executa os testes
-          npx concurrently -k -s first -n "API,WEB,TEST" \
-            "cd apps/api && npm run dev" \
-            "cd apps/web && npm run dev" \
-            "npx wait-on http://localhost:3333 http://localhost:8080 && npx playwright test"
+          # Inicia os servidores em background
+          cd apps/api && npm run dev &
+          cd apps/web && npm run dev &
+
+          # Aguarda os servidores estarem prontos
+          npx wait-on http://localhost:3333 http://localhost:8080 -t 30000
+
+          # Executa os testes
+          npx playwright test
 
       - name: Upload Playwright report
-        if: ${{ !cancelled() }}
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
